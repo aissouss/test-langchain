@@ -17,7 +17,7 @@ Le projet s’appuie sur le **quickstart officiel de LangChain**, puis l’enric
 * Une clé API Anthropic valide
 
 ---
-📚 Ressources
+## 📚 Ressources
 
 Documentation Open-Meteo (API météo et géocodage) :
 https://open-meteo.com/en/docs
