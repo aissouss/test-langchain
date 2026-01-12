@@ -1,0 +1,7 @@
+langchain
+langchain-anthropic
+requests
+openmeteo-requests
+requests-cache
+retry-requests
+python-dotenv
