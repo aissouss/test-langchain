@@ -17,10 +17,23 @@ Le projet s’appuie sur le **quickstart officiel de LangChain**, puis l’enric
 * Une clé API Anthropic valide
 
 ---
+
 ## 📚 Ressources
 
-Documentation Open-Meteo (API météo et géocodage) :
+Documentation Open-Meteo (API météo) :
 https://open-meteo.com/en/docs
+
+Documentation Open-Meteo – API de géocodage :
+https://open-meteo.com/en/docs/geocoding-api
+
+Bibliothèque Python open-meteo (PyPI) :
+https://pypi.org/project/open-meteo/
+
+Bibliothèque Python openmeteo-requests (client officiel Open-Meteo) :
+https://pypi.org/project/openmeteo-requests/
+
+Tutoriel externe pour exploiter des données météo en Python :
+https://www.geodose.com/2023/08/get-plot-weather-data-python.html
 
 Documentation LangChain – Quickstart Python :
 https://docs.langchain.com/oss/python/langchain/quickstart
@@ -30,8 +43,6 @@ https://docs.langchain.com/oss/python/langchain/quickstart
 ## ⚙️ Installation et configuration
 
 ### 1️⃣ Installation des dépendances
-
-Installer LangChain et l’intégration Anthropic :
 
 ```bash
 pip install -U langchain
@@ -65,14 +76,12 @@ Cette configuration permet à LangChain d’accéder au modèle Claude sans incl
 
 ## 🚀 Lancement du projet
 
-Exécuter le fichier principal :
-
 ```bash
 python agentmeteo.py
 ```
 
 Une interface en ligne de commande s’ouvre.
-L’utilisateur peut poser des questions météo sur **différentes villes** jusqu’à taper `exit` pour quitter.
+L’utilisateur peut poser des questions météo sur différentes villes jusqu’à taper `exit` pour quitter.
 
 ---
 
@@ -95,42 +104,38 @@ Deux **dataclasses** ont été introduites pour structurer proprement les donné
 
 #### `LocationData`
 
-Contient les informations de localisation :
-
 * nom de la ville
 * latitude
 * longitude
 
 #### `WeatherData`
 
-Contient les informations météo :
-
 * température
 * humidité
 * vitesse du vent
 * conditions météo
 
-Le choix des **dataclasses** a été fait pour améliorer la lisibilité, la structure et la maintenabilité du code par rapport à un simple dictionnaire.
+Le choix des dataclasses améliore la lisibilité, la structure et la maintenabilité du code par rapport à un simple dictionnaire.
 
 ---
 
 ### 🔹 Outil `get_user_location`
 
-* Convertit le nom d’une ville en coordonnées géographiques.
-* Utilise l’API de **géocodage Open-Meteo**.
-* Vérifie si la ville existe.
-* Extrait le **premier résultat** retourné par l’API.
-* Retourne un objet `LocationData`.
+* Convertit le nom d’une ville en coordonnées géographiques
+* Utilise l’API de **géocodage Open-Meteo**
+* Vérifie si la ville existe
+* Extrait le **premier résultat** retourné
+* Retourne un objet `LocationData`
 
 ---
 
 ### 🔹 Outil `get_weather_for_location`
 
-* Récupère la météo actuelle à partir des coordonnées.
+* Récupère la météo actuelle à partir des coordonnées
 * Utilise l’API **Open-Meteo** avec :
 
   * cache des requêtes
-  * mécanisme de retry pour la fiabilité
+  * mécanisme de retry
 * Retourne :
 
   * température
@@ -144,9 +149,9 @@ Les données sont encapsulées dans un objet `WeatherData`.
 
 ### 🔹 Agent LangChain et mémoire
 
-* Le modèle Claude est conservé tel que dans le quickstart.
-* Une mémoire conversationnelle en RAM (`InMemorySaver`) est utilisée.
-* L’agent peut répondre à **plusieurs questions successives**, sur différentes villes, dans une même session.
+* Le modèle Claude est conservé tel que dans le quickstart
+* Une mémoire conversationnelle en RAM (`InMemorySaver`) est utilisée
+* L’agent peut répondre à plusieurs questions successives dans une même session
 
 ---
 
@@ -173,21 +178,47 @@ Données: Temperature: 22°C | Sunny | Humidity: 65% | Wind: 12 km/h
 
 ### 🔸 Utilisation de l’API météo
 
-* La documentation fournissait des exemples partiels.
-* Il a fallu comprendre la structure des réponses API et adapter les appels REST.
-* Lors de tests complémentaires, la récupération des données météo a été ajustée afin d’utiliser uniquement des variables courantes explicites et d’améliorer la gestion des cas où certaines informations ne sont pas reconnues.
+* La documentation fournissait des exemples partiels
+* Il a fallu comprendre la structure des réponses API et adapter les appels REST
+
+### 🔸 **Optimisation de la récupération des données météo (amélioration apportée)**
+
+**Problème principal identifié :**
+Le code initial utilisait `current_weather=True` combiné avec
+`hourly="relative_humidity_2m"`.
+Cette approche téléchargeait **168 heures de données (7 jours)** uniquement pour récupérer l’humidité actuelle, tout en mélangeant deux sources de données (`current` et `hourly`).
+
+**Solution implémentée :**
+Migration vers le format moderne de l’API Open-Meteo :
+
+```json
+"current": [
+  "temperature_2m",
+  "wind_speed_10m",
+  "relative_humidity_2m",
+  "weather_code"
+]
+```
+
+Cette approche permet d’obtenir toutes les données actuelles en **un seul appel cohérent**, avec un **ordre garanti** des variables.
+
+**Autres améliorations :**
+
+* Extension du mapping des codes météo (10 → 27 codes WMO)
+* Correction d’un bug d’affichage lors des comparaisons multi-villes
+* Amélioration du system prompt
 
 ### 🔸 Géolocalisation
 
-* La météo nécessite des coordonnées GPS.
-* Une API de géocodage a donc été intégrée en amont pour convertir les villes en latitude/longitude.
+* La météo nécessite des coordonnées GPS
+* Une API de géocodage a été intégrée pour convertir les villes en latitude/longitude
 
 ### 🔸 Structuration des données
 
-* Le passage de chaînes de caractères simples à des données structurées a demandé une réflexion sur le design.
-* Les `dataclasses` ont permis une solution propre et efficace.
+* Passage de chaînes simples à des données structurées
+* Les `dataclasses` ont permis une solution propre et maintenable
 
-L’utilisation d’outils comme la documentation officielle et des assistants IA (ChatGPT, Claude) a permis de débloquer certaines incompréhensions et d’approfondir la compréhension du fonctionnement des APIs.
+L’utilisation de la documentation officielle et d’assistants IA (ChatGPT, Claude) a permis de lever certaines incompréhensions et d’approfondir la compréhension des APIs.
 
 ---
 
@@ -195,16 +226,12 @@ L’utilisation d’outils comme la documentation officielle et des assistants I
 
 ### 🎯 Justification
 
-J’ai choisi l’Option B car elle permet de donner une **véritable utilité** à l’agent météo.
-Utiliser des **données réelles** rend l’agent plus pertinent et plus intéressant pour l’utilisateur qu’une simple simulation.
+L’Option B permet de donner une **véritable utilité** à l’agent météo.
+L’utilisation de données réelles rend l’agent plus pertinent qu’une simple simulation.
 
-De plus :
-
-* l’agent peut répondre pour **n’importe quelle ville**
-* les informations retournées sont **structurées**
-* l’expérience utilisateur est plus naturelle (saisie libre, boucle interactive)
-
-Cette approche correspond davantage à un **cas d’usage réel** et exploite pleinement les capacités de LangChain.
+* Réponses possibles pour n’importe quelle ville
+* Données structurées
+* Interaction naturelle en ligne de commande
 
 ---
 
@@ -215,7 +242,13 @@ Ce projet m’a permis :
 * de suivre et comprendre un tutoriel LangChain,
 * d’adapter un code existant,
 * d’intégrer des APIs externes,
-* et de concevoir un agent IA plus utile et réaliste.
+* et de concevoir un agent IA plus réaliste.
 
 ---
-Note : Le contenu de ce README a été rédigé à partir de mes propres explications et de mon travail personnel ; ChatGPT a uniquement servi à reformuler et améliorer la qualité rédactionnelle.
+
+**Note :** le contenu de ce README est basé sur mon travail personnel ; ChatGPT a uniquement servi à reformuler et améliorer la qualité rédactionnelle.
+
+---
+
+* te donner une **version orale de 20 secondes**
+* vérifier que **GitHub est parfaitement cohérent** avec ce README
