@@ -170,7 +170,7 @@ Agent: Looks like Paris is having a sun-sational day!
 Données: Temperature: 22°C | Sunny | Humidity: 65% | Wind: 12 km/h
 ```
 
-📸 Des captures d’écran de l’exécution sont disponibles en annexe.
+📸 Des captures d'écran sont disponibles dans le dépôt GitHub.
 
 ---
 
