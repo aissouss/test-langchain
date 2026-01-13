@@ -250,5 +250,4 @@ Ce projet m’a permis :
 
 ---
 
-* te donner une **version orale de 20 secondes**
-* vérifier que **GitHub est parfaitement cohérent** avec ce README
+
