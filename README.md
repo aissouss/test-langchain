@@ -175,6 +175,7 @@ Données: Temperature: 22°C | Sunny | Humidity: 65% | Wind: 12 km/h
 
 * La documentation fournissait des exemples partiels.
 * Il a fallu comprendre la structure des réponses API et adapter les appels REST.
+* Lors de tests complémentaires, la récupération des données météo a été ajustée afin d’utiliser uniquement des variables courantes explicites et d’améliorer la gestion des cas où certaines informations ne sont pas reconnues.
 
 ### 🔸 Géolocalisation
 
