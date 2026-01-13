@@ -116,7 +116,7 @@ def get_weather_for_location(location: LocationData) -> WeatherData:
     current = response.Current()
     temperature = current.Variables(0).Value()
     wind_speed = current.Variables(1).Value()
-    weather_code = int(current.Variables(2).Value())
+    weather_code = int(current.Variables(3).Value())
     conditions = weather_code_to_text(weather_code)
 
     # Humidity (first hourly value = now)
