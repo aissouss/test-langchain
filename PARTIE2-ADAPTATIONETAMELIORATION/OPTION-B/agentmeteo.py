@@ -23,7 +23,7 @@ You have access to two tools:
 - get_user_location: use this to convert a city name into geographic coordinates
 
 If the user asks for the weather, extract the city from the message and provide the current weather.
-Always return structured weather fields (temperature, humidity, wind_speed, conditions, city) along with a punny_response.
+You can handle multiple cities in one request.
 """
 
 
@@ -55,12 +55,8 @@ class ResponseFormat:
     """Response schema for the agent."""
     # A punny response (always required)
     punny_response: str
-    # Structured weather details (always required)
-    temperature: float
-    humidity: float
-    wind_speed: float
-    conditions: str
-    city: str | None = None
+    # Any interesting information about the weather if available
+    weather_conditions: str | None = None
 
 
 # ===============================
@@ -116,6 +112,7 @@ def get_weather_for_location(location: LocationData) -> WeatherData:
     current = response.Current()
     temperature = current.Variables(0).Value()
     wind_speed = current.Variables(1).Value()
+    # Variables(3) contains the WMO weather code (not Variables(2) which is wind direction)
     weather_code = int(current.Variables(3).Value())
     conditions = weather_code_to_text(weather_code)
 
@@ -132,6 +129,7 @@ def get_weather_for_location(location: LocationData) -> WeatherData:
     )
 
 def weather_code_to_text(code: int) -> str:
+    """Convert WMO weather code to human-readable text."""
     mapping = {
         0: "Clear sky",
         1: "Mainly clear",
@@ -220,13 +218,6 @@ while True:
     # main response with puns
     print(f"Agent: {structured.punny_response}\n")
 
-    # Always print structured weather details
-    city_label = f"{structured.city}" if structured.city else "Unknown city"
-    print(
-        "Données: "
-        f"City: {city_label}, "
-        f"Temperature: {structured.temperature:.1f}°C, "
-        f"Humidity: {structured.humidity:.0f}%, "
-        f"Wind Speed: {structured.wind_speed:.1f} km/h, "
-        f"Conditions: {structured.conditions}\n"
-    )
+    # if weather data is available, print it
+    if structured.weather_conditions:
+        print(f"Données: {structured.weather_conditions}\n")
