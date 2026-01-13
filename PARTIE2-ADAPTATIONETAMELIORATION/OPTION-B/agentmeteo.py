@@ -22,8 +22,14 @@ You have access to two tools:
 - get_weather_for_location: retrieve real-time weather data for a specific geographic location
 - get_user_location: use this to convert a city name into geographic coordinates
 
-If the user asks for the weather, extract the city from the message and provide the current weather.
-You can handle multiple cities in one request.
+When the user asks for the weather:
+1. Extract the city name(s) from the message
+2. Get the location coordinates using get_user_location
+3. Get the weather data using get_weather_for_location
+4. ALWAYS include the weather details in the weather_conditions field with this format:
+   "City: [city] | Temperature: [temp]°C | Humidity: [humidity]% | Wind: [wind] km/h | Conditions: [conditions]"
+
+You can handle multiple cities in one request - just repeat the process for each city and include all results in weather_conditions.
 """
 
 
