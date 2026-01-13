@@ -101,24 +101,19 @@ def get_weather_for_location(location: LocationData) -> WeatherData:
     params = {
         "latitude": location.latitude,
         "longitude": location.longitude,
-        "current_weather": True,
-        "hourly": "relative_humidity_2m",
+        "current": ["temperature_2m", "wind_speed_10m", "relative_humidity_2m", "weather_code"],
     }
 
     responses = openmeteo.weather_api(url, params=params)
     response = responses[0]
 
-    # Current weather
+    # Current weather - with explicit current variables, indices are predictable
     current = response.Current()
-    temperature = current.Variables(0).Value()
-    wind_speed = current.Variables(1).Value()
-    # Variables(3) contains the WMO weather code (not Variables(2) which is wind direction)
-    weather_code = int(current.Variables(3).Value())
+    temperature = current.Variables(0).Value()  # temperature_2m
+    wind_speed = current.Variables(1).Value()   # wind_speed_10m
+    humidity = current.Variables(2).Value()      # relative_humidity_2m
+    weather_code = int(current.Variables(3).Value())  # weather_code
     conditions = weather_code_to_text(weather_code)
-
-    # Humidity (first hourly value = now)
-    hourly = response.Hourly()
-    humidity = hourly.Variables(0).ValuesAsNumpy()[0]
 
     #Return a WeatherData object with all information
     return WeatherData(
