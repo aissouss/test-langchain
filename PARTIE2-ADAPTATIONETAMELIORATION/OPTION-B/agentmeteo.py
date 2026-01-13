@@ -22,7 +22,14 @@ You have access to two tools:
 - get_weather_for_location: retrieve real-time weather data for a specific geographic location
 - get_user_location: use this to convert a city name into geographic coordinates
 
-If the user asks for the weather, extract the city from the message and provide the current weather.
+When the user asks for the weather:
+1. Extract the city name(s) from the message
+2. Get the location coordinates using get_user_location
+3. Get the weather data using get_weather_for_location
+4. ALWAYS include the weather details in the weather_conditions field with this format:
+   "City: [city] | Temperature: [temp]°C | Humidity: [humidity]% | Wind: [wind] km/h | Conditions: [conditions]"
+
+You can handle multiple cities in one request - just repeat the process for each city and include all results in weather_conditions.
 """
 
 
@@ -100,23 +107,19 @@ def get_weather_for_location(location: LocationData) -> WeatherData:
     params = {
         "latitude": location.latitude,
         "longitude": location.longitude,
-        "current_weather": True,
-        "hourly": "relative_humidity_2m",
+        "current": ["temperature_2m", "wind_speed_10m", "relative_humidity_2m", "weather_code"],
     }
 
     responses = openmeteo.weather_api(url, params=params)
     response = responses[0]
 
-    # Current weather
+    # Current weather - with explicit current variables, indices are predictable
     current = response.Current()
-    temperature = current.Variables(0).Value()
-    wind_speed = current.Variables(1).Value()
-    weather_code = int(current.Variables(2).Value())
+    temperature = current.Variables(0).Value()  # temperature_2m
+    wind_speed = current.Variables(1).Value()   # wind_speed_10m
+    humidity = current.Variables(2).Value()      # relative_humidity_2m
+    weather_code = int(current.Variables(3).Value())  # weather_code
     conditions = weather_code_to_text(weather_code)
-
-    # Humidity (first hourly value = now)
-    hourly = response.Hourly()
-    humidity = hourly.Variables(0).ValuesAsNumpy()[0]
 
     #Return a WeatherData object with all information
     return WeatherData(
@@ -127,19 +130,38 @@ def get_weather_for_location(location: LocationData) -> WeatherData:
     )
 
 def weather_code_to_text(code: int) -> str:
+    """Convert WMO weather code to human-readable text."""
     mapping = {
-        0: "Sunny Clear sky",
+        0: "Clear sky",
         1: "Mainly clear",
         2: "Partly cloudy",
-        3: "Overcast, Cloudy",
+        3: "Overcast",
         45: "Fog",
         48: "Depositing rime fog",
         51: "Light drizzle",
-        61: "Rain",
-        71: "Snow",
-        80: "Rain showers"
+        53: "Moderate drizzle",
+        55: "Dense drizzle",
+        56: "Light freezing drizzle",
+        57: "Dense freezing drizzle",
+        61: "Slight rain",
+        63: "Moderate rain",
+        65: "Heavy rain",
+        66: "Light freezing rain",
+        67: "Heavy freezing rain",
+        71: "Slight snow fall",
+        73: "Moderate snow fall",
+        75: "Heavy snow fall",
+        77: "Snow grains",
+        80: "Slight rain showers",
+        81: "Moderate rain showers",
+        82: "Violent rain showers",
+        85: "Slight snow showers",
+        86: "Heavy snow showers",
+        95: "Thunderstorm",
+        96: "Thunderstorm with slight hail",
+        99: "Thunderstorm with heavy hail"
     }
-    return mapping.get(code, "Unknown")
+    return mapping.get(code, f"Unknown (code {code})")
 
 
 
@@ -200,4 +222,3 @@ while True:
     # if weather data is available, print it
     if structured.weather_conditions:
         print(f"Données: {structured.weather_conditions}\n")
-
