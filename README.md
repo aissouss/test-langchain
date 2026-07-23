@@ -184,7 +184,7 @@ This project was built as a **pre-interview technical test** assessing the abili
 
 ## 👤 Author
 
-**Aissous**  
+**Aissouss**  
 [GitHub](https://github.com/aissouss)
 
 ---
